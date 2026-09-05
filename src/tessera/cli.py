@@ -11,7 +11,7 @@ from rich.panel import Panel
 from rich.table import Table
 from rich.text import Text
 
-from tessera import __app_name__, __version__
+from tessera import __version__
 from tessera.apply import apply_plan, save_plan
 from tessera.apply.internal import dispatch
 from tessera.apply.planner import build_plan, plan_json
@@ -27,6 +27,7 @@ from tessera.models import (
 )
 from tessera.catalog.security import defaults_for
 from tessera.serialize import dumps
+from tessera.tui.brand import STAR_GLYPH, wordmark
 
 app = typer.Typer(
     add_completion=False,
@@ -52,7 +53,7 @@ def _root(
     lang: Optional[str] = typer.Option(None, "--lang", help="it|en"),
 ) -> None:
     if version:
-        console.print(f"{__app_name__} {__version__}")
+        console.print(wordmark(__version__))
         raise typer.Exit(0)
     if ctx.invoked_subcommand is None:
         from tessera.tui.app import TesseraApp
@@ -252,7 +253,7 @@ def _print_snapshot(snap) -> None:  # noqa: ANN001
     head = Text()
     head.append(snap.hostname + "\n", style="bold cyan")
     head.append(f"{snap.distro.pretty} · {snap.chassis.value} · {snap.cpu.arch}\n", style="dim")
-    console.print(Panel(head, title="tessera detect", border_style="cyan"))
+    console.print(Panel(head, title=f"{STAR_GLYPH} tessera detect", border_style="cyan"))
     t = Table(show_header=False)
     t.add_row("cpu", f"{snap.cpu.model} ({snap.cpu.cores_physical}c/{snap.cpu.cores_logical}t)")
     t.add_row("ram", f"{snap.memory.total_gib:.1f} GiB")

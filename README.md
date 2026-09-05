@@ -38,6 +38,45 @@ Il ruolo **cyber** installa strumenti da repository ufficiali (nmap, wireshark, 
 
 Python 3.11+.
 
+### EndeavourOS (e Arch)
+
+EndeavourOS usa `pacman` (e spesso `yay`). Clona il repo, crea il venv, lancia la TUI.
+
+```bash
+# Origin CLI (Linux nativo)
+curl -fsSL https://downloads.cursor.com/origin/install.sh | sh
+origin auth login
+origin repo clone francesco-tannoia/linux-config-optimizer
+cd linux-config-optimizer
+```
+
+Se `origin` non viene trovato:
+
+```bash
+echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
+source ~/.bashrc
+```
+
+Poi Python e Tessera:
+
+```bash
+sudo pacman -S --needed python python-pip git
+# opzionale, più veloce di pip:
+# curl -LsSf https://astral.sh/uv/install.sh | sh
+# source ~/.bashrc
+# uv sync
+# uv run tessera
+
+python -m venv .venv
+source .venv/bin/activate
+pip install -e .
+tessera
+```
+
+Repository: https://cursor.com/codebase/francesco-tannoia/linux-config-optimizer (privato; visibilità dalle impostazioni della pagina). Docs Origin: https://cursor.com/docs/origin/cli
+
+### Altre distro
+
 ```bash
 # dalla root del repo
 uv sync --extra dev

@@ -8,6 +8,7 @@ from textual.message import Message
 from textual.widgets import Button, Input, Label, ListItem, ListView, Static
 
 from tessera.tui.state import STEPS
+from tessera.tui.brand import rail_brand
 
 STEP_LABEL = {
     "welcome": ("01", "ingresso"),
@@ -36,7 +37,7 @@ class Rail(Vertical):
         self.current = current
 
     def compose(self) -> ComposeResult:
-        yield Static("[bold #7ee0c6]tessera[/]\n[dim]─────────[/]", id="rail-brand")
+        yield Static(rail_brand(), id="rail-brand")
         for key in STEPS:
             num, name = STEP_LABEL[key]
             yield Button(f"{num}  {name}", id=f"step-{key}", classes="rail-btn")

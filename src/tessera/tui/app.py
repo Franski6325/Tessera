@@ -33,6 +33,7 @@ from tessera.models import (
 )
 from tessera.tui.state import STEPS, Session
 from tessera.tui.widgets import Palette, Rail, StatusBar
+from tessera.tui.brand import topbar_markup, welcome_banner
 
 CSS = """
 Screen {
@@ -88,7 +89,7 @@ Screen {
 }
 
 #topbar {
-    height: 3;
+    height: 4;
     padding: 0 2;
     background: #101820;
     border-bottom: tall #1e2a38;
@@ -199,12 +200,6 @@ Footer {
 }
 """
 
-BANNER = """\
-[bold #7ee0c6]  ▐▛███▜▌  tessera[/]  [dim]{version}[/]
-[bold #7ee0c6]  ▝▜█████▛▘[/]  [italic #9aabba]mosaico del tuo linux[/]
-[bold #7ee0c6]    ▘▘ ▝▝  [/]
-"""
-
 
 class HelpModal(ModalScreen[None]):
     BINDINGS = [Binding("escape,q", "close", "chiudi", show=False)]
@@ -277,9 +272,7 @@ class TesseraApp(App[None]):
             "review": ("08", "revisione"),
             "apply": ("09", "applica"),
         }[self.step]
-        self.query_one("#topbar", Static).update(
-            f"[bold #7ee0c6]{num}  {name}[/]   [dim]tessera {__version__} · mosaico tastiera-first[/]"
-        )
+        self.query_one("#topbar", Static).update(topbar_markup(num, name, __version__))
         self.query_one(Rail).set_current(self.step)
 
     def goto(self, step: str) -> None:
@@ -434,7 +427,7 @@ class TesseraApp(App[None]):
 
     def _pane_welcome(self, pane: Static, body: VerticalScroll) -> None:
         pane.update(
-            BANNER.format(version=__version__)
+            welcome_banner(__version__)
             + "\n"
             + "[#d7e0ea]Tessera legge l'hardware di [bold]questa[/] macchina, propone un profilo "
             "energetico deterministico, e ti fa scegliere ruoli combinabili "
