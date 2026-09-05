@@ -1,0 +1,60 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "tessera"
+version = "1.0.0"
+description = "TUI Linux workstation profiler: hardware, ruoli, sicurezza e pacchetti — originale, deterministico, su ogni distro open source."
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.11"
+authors = [{ name = "Tessera" }]
+keywords = ["linux", "tui", "hardware", "security", "hardening", "pentest-lab", "sysadmin"]
+classifiers = [
+  "Development Status :: 5 - Production/Stable",
+  "Environment :: Console",
+  "Intended Audience :: System Administrators",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: POSIX :: Linux",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Topic :: System :: Systems Administration",
+]
+dependencies = [
+  "textual>=1.0.0,<2",
+  "typer>=0.15.0",
+  "rich>=13.9.0",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.3.0",
+  "pytest-asyncio>=0.24.0",
+]
+
+[project.scripts]
+tessera = "tessera.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/tessera"]
+
+[tool.hatch.build.targets.wheel.sources]
+"src/tessera" = "tessera"
+
+[tool.hatch.build.targets.sdist]
+include = ["src/tessera", "tests", "README.md", "LICENSE"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+addopts = "-q --strict-markers"
+asyncio_mode = "auto"
+
+[tool.ruff]
+line-length = 110
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
