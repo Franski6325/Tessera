@@ -41,7 +41,9 @@ def detect_dmi() -> DmiInfo:
         base = Path("/sys/devices/virtual/dmi/id")
 
     def grab(name: str) -> str | None:
-        return read_text(base / name, default=None)
+        # product_serial is often root-only; never abort the whole DMI probe for that.
+        raw = read_text(base / name, default="")
+        return raw or None
 
     serial = redact_serial(grab("product_serial"))
     return DmiInfo(

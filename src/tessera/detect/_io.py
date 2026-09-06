@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import errno
 import os
 import shutil
 import subprocess
@@ -23,14 +24,17 @@ def read_text(path: Path | str, *, default: str | None = None, max_bytes: int = 
     except FileNotFoundError:
         return default
     except PermissionError:
-        if default is not None:
-            return default
-        raise ProbeError(
-            f"Permesso negato su {p}",
-            code="probe.eacces",
-            hint="Alcuni nodi DMI richiedono root. Tessera continua con i dati pubblici.",
-        )
+        return default
     except OSError as exc:
+        # sysfs often returns EINVAL for inapplicable nodes (e.g. wlan0/speed).
+        if getattr(exc, "errno", None) in {
+            errno.EINVAL,
+            errno.ENOTTY,
+            errno.ENODEV,
+            errno.EOPNOTSUPP,
+            errno.EIO,
+        }:
+            return default
         if default is not None:
             return default
         raise ProbeError(f"Lettura fallita {p}: {exc}", code="probe.io") from exc

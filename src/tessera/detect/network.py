@@ -20,7 +20,8 @@ def detect_network() -> NetworkInfo:
         mac = read_text(path / "address", default=None)
         oper = (read_text(path / "operstate", default="down") or "down").lower()
         wireless = (path / "wireless").exists() or (path / "phy80211").exists()
-        speed = read_int(path / "speed")
+        # 802.11 has no meaningful sysfs speed; reading it raises EINVAL on many kernels.
+        speed = None if wireless else read_int(path / "speed")
         ipv4, ipv6 = _addrs(name)
         ifaces.append(
             NetIface(

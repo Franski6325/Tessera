@@ -255,9 +255,9 @@ class TesseraApp(App[None]):
                 yield StatusBar()
         yield Footer()
 
-    def on_mount(self) -> None:
+    async def on_mount(self) -> None:
         self._render_top()
-        self._render_pane()
+        await self._render_pane()
         self.query_one(StatusBar).set_host("—", "in attesa della scansione")
 
     def _render_top(self) -> None:
@@ -275,7 +275,7 @@ class TesseraApp(App[None]):
         self.query_one("#topbar", Static).update(topbar_markup(num, name, __version__))
         self.query_one(Rail).set_current(self.step)
 
-    def goto(self, step: str) -> None:
+    async def goto(self, step: str) -> None:
         if step not in STEPS:
             return
         if step != "welcome" and self.session.snapshot is None:
@@ -283,17 +283,17 @@ class TesseraApp(App[None]):
                 return
         self.step = step
         self._render_top()
-        self._render_pane()
+        await self._render_pane()
 
-    def action_next_step(self) -> None:
+    async def action_next_step(self) -> None:
         i = STEPS.index(self.step)
         if i + 1 < len(STEPS):
-            self.goto(STEPS[i + 1])
+            await self.goto(STEPS[i + 1])
 
-    def action_prev_step(self) -> None:
+    async def action_prev_step(self) -> None:
         i = STEPS.index(self.step)
         if i > 0:
-            self.goto(STEPS[i - 1])
+            await self.goto(STEPS[i - 1])
 
     def action_help(self) -> None:
         self.push_screen(HelpModal())
@@ -320,23 +320,23 @@ class TesseraApp(App[None]):
         def _done(cmd: str | None) -> None:
             self._palette_open = False
             if cmd:
-                self._run_command(cmd)
+                self.run_worker(self._run_command(cmd), exclusive=True, name="cmd")
 
         self._palette_open = True
         self.push_screen(PaletteModal(), _done)
 
-    def _run_command(self, cmd: str) -> None:
+    async def _run_command(self, cmd: str) -> None:
         if cmd == "quit":
             self.exit()
             return
         if cmd == "scan":
-            self._scan()
+            await self._scan()
             return
         if cmd == "export":
             self._export()
             return
         if cmd.startswith("goto:"):
-            self.goto(cmd.split(":", 1)[1])
+            await self.goto(cmd.split(":", 1)[1])
             return
         if cmd.startswith("lang:"):
             self.session.lang = cmd.split(":", 1)[1]
@@ -345,8 +345,8 @@ class TesseraApp(App[None]):
     def action_quit_app(self) -> None:
         self.exit()
 
-    def action_rescan(self) -> None:
-        self._scan()
+    async def action_rescan(self) -> None:
+        await self._scan()
 
     def action_cursor_down(self) -> None:
         self._nudge_list(1)
@@ -392,10 +392,10 @@ class TesseraApp(App[None]):
         )
         return True
 
-    def _scan(self) -> None:
+    async def _scan(self) -> None:
         if not self._collect():
             return
-        self.goto("hardware" if self.step == "welcome" else self.step)
+        await self.goto("hardware" if self.step == "welcome" else self.step)
 
     def _export(self) -> None:
         if not self.session.snapshot:
@@ -406,11 +406,11 @@ class TesseraApp(App[None]):
         self.session.last_plan_path = str(path)
         self.notify(f"piano → {path}")
 
-    def _render_pane(self) -> None:
+    async def _render_pane(self) -> None:
         body = self.query_one("#body", VerticalScroll)
-        extra = [child for child in body.children if child.id != "pane"]
+        extra = [child for child in list(body.children) if child.id != "pane"]
         if extra:
-            body.remove_children(extra)
+            await body.remove_children(extra)
         pane = self.query_one("#pane", Static)
         fn = {
             "welcome": self._pane_welcome,
@@ -703,15 +703,15 @@ class TesseraApp(App[None]):
         row.mount(Button("applica sul serio", id="btn-live", classes="-danger"))
         row.mount(Button("esporta script", id="btn-export"))
 
-    def on_button_pressed(self, event: Button.Pressed) -> None:
+    async def on_button_pressed(self, event: Button.Pressed) -> None:
         bid = event.button.id or ""
         if bid.startswith("step-"):
-            self.goto(bid[5:])
+            await self.goto(bid[5:])
             return
         if bid == "btn-quit":
             self.exit()
         elif bid == "btn-scan":
-            self._scan()
+            await self._scan()
         elif bid == "btn-export":
             self._export()
         elif bid == "btn-dry":
@@ -802,14 +802,14 @@ class TesseraApp(App[None]):
         if not val and kind in self.session.choices.retire_helpers:
             self.session.choices.retire_helpers.remove(kind)
 
-    def on_option_list_option_selected(self, event: OptionList.OptionSelected) -> None:
+    async def on_option_list_option_selected(self, event: OptionList.OptionSelected) -> None:
         oid = event.option_id or event.option.id or ""
         if self.step == "power" and oid in {p.value for p in PowerProfile}:
             self.session.choices.power = PowerProfile(oid)
-            self._render_pane()
+            await self._render_pane()
         elif self.step == "security" and oid in {s.value for s in SecurityLevel}:
             self.session.set_security(SecurityLevel(oid))
-            self._render_pane()
+            await self._render_pane()
         elif oid.startswith("pri-"):
             self.session.choices.primary_manager = ManagerKind(oid[4:])
-            self._render_pane()
+            await self._render_pane()
